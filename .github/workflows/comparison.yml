@@ -17,6 +17,16 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        
+    - name: Report runner specifications
+      run: |
+        echo "--- CPU Info ---"
+        nproc --all
+        lscpu
+        echo "--- Memory Info ---"
+        free -h
+        echo "--- Disk Space ---"
+        df -h
     
     - name: Install dependencies
       run: npm ci
