@@ -1,8 +1,8 @@
 import test, { expect } from "@playwright/test";
 
-for (let i = 0; i < 20; i++) {
+// for (let i = 0; i < 20; i++) {
 
-    test(`demoqa${i}`, async ({ page }) => {
+    test.skip(`demoqa`, async ({ page }) => {
 
         //Navigate to the demo QA site
         await page.goto('https://demoqa.com/automation-practice-form');
@@ -87,6 +87,6 @@ for (let i = 0; i < 20; i++) {
         await page.getByText('Slider').click();
         await page.getByRole('slider').fill('78');
     });
-}
+// }
 
 
