@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
-        working-directory:./playwright-ts-benchmark
+        working-directory:./playwright-ts-project
     
     steps:
       - name: Checkout Code
