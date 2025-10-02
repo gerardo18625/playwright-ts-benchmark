@@ -17,7 +17,7 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
-        
+
     - name: Report runner specifications
       run: |
         echo "--- CPU Info ---"
@@ -28,11 +28,35 @@ jobs:
         echo "--- Disk Space ---"
         df -h
     
+    - name: Get npm cache directory
+      id: npm-cache-dir
+      run: |
+        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
+    - name: Cache npm dependencies
+      uses: actions/cache@v4
+      id: npm-cache
+      with:
+        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    
     - name: Install dependencies
       run: npm ci
+
+    - name: Cache Playwright Browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
     
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
 
     # STEP 1: Define Resource Monitor Script (Same as before, ensuring spacing)
     - name: Define Resource Monitor Script
@@ -54,7 +78,7 @@ jobs:
         MONITOR_PID=$!
         echo "Monitor PID: $MONITOR_PID"
         
-        npx playwright test --workers 2
+        npx playwright test --workers 1
         TEST_EXIT_CODE=$?
         
         kill $MONITOR_PID
