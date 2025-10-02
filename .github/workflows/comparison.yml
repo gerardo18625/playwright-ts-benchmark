@@ -1,0 +1,74 @@
+name: E2E Runner Comparison Benchmark
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  # JOB 1: Playwright Test Runner (TypeScript/Node.js)
+  typescript_benchmark:
+    # Use a standard, powerful runner type for a fair comparison base.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory:./playwright-ts-benchmark
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup Node.js Environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies & Browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Define Resource Monitor Script
+        # This script runs in the background and continuously samples CPU and Memory.
+        run: |
+          echo '#!/bin/bash' > monitor.sh
+          echo 'while true; do' >> monitor.sh
+          # Captures overall CPU usage (idle time) and Memory usage (used)
+          echo '  CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk "{print 100 - \$1}")' >> monitor.sh
+          echo '  MEM_USAGE=$(free -m | grep Mem | awk "{print \$3/\$2 * 100.0}")' >> monitor.sh
+          echo '  echo "$(date +%s),CPU:$CPU_USAGE,MEM:$MEM_USAGE" >>../resource_log_ts.txt' >> monitor.sh
+          echo '  sleep 3' >> monitor.sh
+          echo 'done' >> monitor.sh
+          chmod +x monitor.sh
+        shell: bash
+
+      - name: Run Playwright TS Tests (N=8 Workers)
+        # 1. Start the monitoring script in the background.
+        # 2. Run the full test suite with explicit parallel load (8 workers).
+        # The Playwright Test Runner handles parallelism natively.[3]
+        run: |
+         ./monitor.sh &
+          MONITOR_PID=$!
+          echo "Monitor started with PID: $MONITOR_PID"
+          
+          # Execute the 100 tests in parallel
+          npx playwright test --workers 8 --headed false 2>&1 | tee../test_output_ts.txt
+          TEST_EXIT_CODE=$?
+          
+          # Stop the monitor script and capture output
+          kill $MONITOR_PID
+          
+          if; then
+              echo "Tests failed. Exit code: $TEST_EXIT_CODE"
+              exit $TEST_EXIT_CODE
+          fi
+        shell: bash
+
+      - name: Upload Results (TS)
+        # Upload the raw output and resource log for analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-results
+          path: |
+            resource_log_ts.txt
+            test_output_ts.txt
