@@ -40,18 +40,15 @@ jobs:
     # STEP 2: Run Playwright tests and Monitor Resources (FIXED INDENTATION)
     - name: Run Playwright tests and Monitor Resources (N=8 Workers)
       run: |
-       ./monitor.sh &
+        ./monitor.sh &
         MONITOR_PID=$!
         echo "Monitor PID: $MONITOR_PID"
         
-        # Run the tests with high parallelism
         npx playwright test --workers 8
         TEST_EXIT_CODE=$?
         
-        # Stop the monitor script using the captured PID
         kill $MONITOR_PID
         
-        # Check test exit code and fail the job if tests failed
         if; then
             echo "Tests failed with exit code $TEST_EXIT_CODE."
             exit $TEST_EXIT_CODE
