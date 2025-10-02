@@ -38,7 +38,7 @@ for (let i = 0; i < 1; i++) {
         await page.getByText('Music').click();
 
         // Set the file to upload
-        await page.getByRole('button', { name: 'Select picture' }).setInputFiles('/Users/gerardohernandez/workspace/POC_PLAYWRIGHT/PLAYWRIGHT_FOR_CI_TYPESCRIPT/reportPortal.jpg');
+        //await page.getByRole('button', { name: 'Select picture' }).setInputFiles('/Users/gerardohernandez/workspace/POC_PLAYWRIGHT/PLAYWRIGHT_FOR_CI_TYPESCRIPT/reportPortal.jpg');
 
         // Fill the address
         await page.getByRole('textbox', { name: 'Current Address' }).click();
