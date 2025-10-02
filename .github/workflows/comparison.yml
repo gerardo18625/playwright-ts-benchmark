@@ -72,13 +72,13 @@ jobs:
       shell: bash
 
     # STEP 2: Run Playwright tests and Monitor Resources (FIXED INDENTATION)
-    - name: Run Playwright tests and Monitor Resources (N=8 Workers)
+    - name: Run Playwright tests and Monitor Resources (N=3 Workers)
       run: |
         ./monitor.sh &
         MONITOR_PID=$!
         echo "Monitor PID: $MONITOR_PID"
         
-        npx playwright test --workers 4
+        npx playwright test --workers 3
         TEST_EXIT_CODE=$?
         
         kill $MONITOR_PID
