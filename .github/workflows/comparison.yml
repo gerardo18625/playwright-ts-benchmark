@@ -1,9 +1,13 @@
-name: Playwright Tests
+name: Playwright Tests Benchmark (TS)
+
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  # Adding manual trigger for easy, direct benchmark runs
+  workflow_dispatch:
+
 jobs:
   test:
     timeout-minutes: 60
@@ -13,15 +17,60 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+    
     - name: Install dependencies
       run: npm ci
+    
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test
+
+    # STEP 1: Define Resource Monitor Script (Same as before, ensuring spacing)
+    - name: Define Resource Monitor Script
+      run: |
+        echo '#!/bin/bash' > monitor.sh
+        echo 'while true; do' >> monitor.sh
+        echo '  CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk "{print 100 - \$1}")' >> monitor.sh
+        echo '  MEM_USAGE=$(free -m | grep Mem | awk "{print \$3/\$2 * 100.0}")' >> monitor.sh
+        echo '  echo "$(date +%s),CPU:$CPU_USAGE,MEM:$MEM_USAGE" >> resource_log_ts.txt' >> monitor.sh
+        echo '  sleep 3' >> monitor.sh # Sample every 3 seconds
+        echo 'done' >> monitor.sh
+        chmod +x monitor.sh
+      shell: bash
+
+    # STEP 2: Run Playwright tests and Monitor Resources (FIXED INDENTATION)
+    - name: Run Playwright tests and Monitor Resources (N=8 Workers)
+      run: |
+       ./monitor.sh &
+        MONITOR_PID=$!
+        echo "Monitor PID: $MONITOR_PID"
+        
+        # Run the tests with high parallelism
+        npx playwright test --workers 8
+        TEST_EXIT_CODE=$?
+        
+        # Stop the monitor script using the captured PID
+        kill $MONITOR_PID
+        
+        # Check test exit code and fail the job if tests failed
+        if; then
+            echo "Tests failed with exit code $TEST_EXIT_CODE."
+            exit $TEST_EXIT_CODE
+        fi
+      shell: bash
+    # END OF NEW MONITORING STEPS
+    
+    # Uploads the standard Playwright report
     - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
+      if: ${{!cancelled() }}
       with:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+    
+    # NEW STEP: Uploads the performance log artifact
+    - uses: actions/upload-artifact@v4
+      if: ${{!cancelled() }}
+      with:
+        name: playwright-ts-performance-log
+        path: resource_log_ts.txt
+        retention-days: 7
