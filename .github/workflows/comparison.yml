@@ -78,7 +78,7 @@ jobs:
         MONITOR_PID=$!
         echo "Monitor PID: $MONITOR_PID"
         
-        npx playwright test --workers 4
+        npx playwright test --workers 8
         TEST_EXIT_CODE=$?
         
         kill $MONITOR_PID
