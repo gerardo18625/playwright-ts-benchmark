@@ -1,4 +1,4 @@
-name: Playwright Tests Benchmark (TS)
+name: Playwright Tests Benchmark (TS) - sharding
 
 on:
   workflow_dispatch:
