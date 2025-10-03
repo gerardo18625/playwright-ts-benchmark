@@ -4,7 +4,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  sharded-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -73,7 +78,7 @@ jobs:
         MONITOR_PID=$!
         echo "Monitor PID: $MONITOR_PID"
         
-        npx playwright test --workers 8
+        npx playwright test --workers 8 --shard=${{ matrix.shard }}/4
         TEST_EXIT_CODE=$?
         
         kill $MONITOR_PID
@@ -89,7 +94,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{!cancelled() }}
       with:
-        name: playwright-report
+        name: playwright-report-shard-${{ matrix.shard }}
         path: playwright-report/
         retention-days: 30
     
@@ -97,6 +102,6 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{!cancelled() }}
       with:
-        name: playwright-ts-performance-log
+        name: playwright-ts-performance-log-shard-${{ matrix.shard }}
         path: resource_log_ts.txt
         retention-days: 7
