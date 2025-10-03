@@ -66,19 +66,19 @@ jobs:
         echo '  CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk "{print 100 - \$1}")' >> monitor.sh
         echo '  MEM_USAGE=$(free -m | grep Mem | awk "{print \$3/\$2 * 100.0}")' >> monitor.sh
         echo '  echo "$(date +%s),CPU:$CPU_USAGE,MEM:$MEM_USAGE" >> resource_log_ts.txt' >> monitor.sh
-        echo '  sleep 3' >> monitor.sh # Sample every 1 seconds
+        echo '  sleep 3' >> monitor.sh # Sample every 3 seconds
         echo 'done' >> monitor.sh
         chmod +x monitor.sh
       shell: bash
 
     # STEP 2: Run Playwright tests and Monitor Resources (FIXED INDENTATION)
-    - name: Run Playwright tests and Monitor Resources (N= 1 Workers)
+    - name: Run Playwright tests and Monitor Resources (N= 4 Workers)
       run: |
         ./monitor.sh &
         MONITOR_PID=$!
         echo "Monitor PID: $MONITOR_PID"
         
-        npx playwright test --workers 1
+        npx playwright test --workers 4
         TEST_EXIT_CODE=$?
         
         kill $MONITOR_PID
