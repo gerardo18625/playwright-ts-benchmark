@@ -5,6 +5,8 @@ for (let i = 0; i < 100; i++) {
 
   test(`test${i}`, async ({ page }) => {
 
+    console.log('Running test');
+
     // Navigate to the herokuapp
     await page.goto('https://the-internet.herokuapp.com/');
 
@@ -65,7 +67,6 @@ for (let i = 0; i < 100; i++) {
     // Context menu
     await page.getByRole('link', { name: 'Context Menu' }).click();
     page.once('dialog', dialog => {
-      console.log(`Dialog message: ${dialog.message()}`);
       dialog.dismiss().catch(() => { });
     });
     await page.locator('#hot-spot').click({

@@ -1,4 +1,4 @@
-name: Playwright Tests Benchmark (TS) - sharding
+name: Playwright (TS) Benchmark - sharding
 
 on:
   workflow_dispatch:
@@ -65,7 +65,8 @@ jobs:
         echo 'while true; do' >> monitor.sh
         echo '  CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk "{print 100 - \$1}")' >> monitor.sh
         echo '  MEM_USAGE=$(free -m | grep Mem | awk "{print \$3/\$2 * 100.0}")' >> monitor.sh
-        echo '  echo "$(date +%s),CPU:$CPU_USAGE,MEM:$MEM_USAGE" >> resource_log_ts.txt' >> monitor.sh
+        echo '  echo "DATE,CPU USAGE,MEM_USAGE" >> resource_log_ts.txt' >> monitor.sh
+        echo '  echo "$(date +%s),$CPU_USAGE,$MEM_USAGE" >> resource_log_ts.txt' >> monitor.sh
         echo '  sleep 3' >> monitor.sh # Sample every 3 seconds
         echo 'done' >> monitor.sh
         chmod +x monitor.sh
@@ -78,7 +79,7 @@ jobs:
         MONITOR_PID=$!
         echo "Monitor PID: $MONITOR_PID"
         
-        npx playwright test --workers 8 --shard=${{ matrix.shard }}/4
+        npx playwright test --workers 4 --shard=${{ matrix.shard }}/4
         TEST_EXIT_CODE=$?
         
         kill $MONITOR_PID
@@ -104,4 +105,4 @@ jobs:
       with:
         name: playwright-ts-performance-log-shard-${{ matrix.shard }}
         path: resource_log_ts.txt
-        retention-days: 7
+        retention-days: 30
