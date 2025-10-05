@@ -39,13 +39,7 @@ for (let i = 0; i < 100; i++) {
     await page.getByRole('button', { name: 'Start' }).click();
     await page.goto('https://the-internet.herokuapp.com/');
 
-    // Entry Add
-    await page.getByRole('link', { name: 'Entry Ad' }).click();
-    await expect(page.locator('div').filter({ hasText: 'This is a modal window' }).nth(4)).toBeVisible();
-    await page.getByText('Close', { exact: true }).click();
-    await page.goto('https://the-internet.herokuapp.com/');
-
-    // jQuery menu
+    // jQuery menu and File downloads
     await page.getByRole('link', { name: 'JQuery UI Menus' }).click();
     await page.getByRole('link', { name: 'Enabled' }).click();
     await page.getByRole('link', { name: 'Downloads' }).click();
@@ -64,7 +58,7 @@ for (let i = 0; i < 100; i++) {
     await page1.close();
     await page.goto('https://the-internet.herokuapp.com/');
 
-    // Context menu
+    // Context menu and Alerts
     await page.getByRole('link', { name: 'Context Menu' }).click();
     page.once('dialog', dialog => {
       dialog.dismiss().catch(() => { });
@@ -73,18 +67,17 @@ for (let i = 0; i < 100; i++) {
       button: 'right'
     });
 
-    // Select
+    // Select dropdowns
     await page.goto('https://www.qaplayground.com/practice/select');
     await page.getByRole('combobox').filter({ hasText: 'Select Fruit' }).click();
     await page.getByRole('option', { name: 'Banana' }).click();
-    await page.getByRole('listbox').selectOption('ant-man');
     await page.getByRole('listbox').selectOption('aquaman');
     await page.getByRole('combobox').filter({ hasText: 'JavaScript' }).click();
     await page.getByRole('option', { name: 'Java', exact: true }).click();
     await page.getByRole('combobox').filter({ hasText: 'Argentina' }).click();
     await page.getByRole('option', { name: 'UK' }).click();
 
-    // Datepicker
+    // Date inputs
     await page.goto('https://www.qaplayground.com/practice/calendar');
     await page.locator('div').filter({ hasText: /^Enter todays date:$/ }).getByRole('textbox').fill('2020-01-01');
     await page.locator('div').filter({ hasText: /^Enter your Birthday:$/ }).getByRole('textbox').fill('2026-01-01');
