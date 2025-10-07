@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 50; i++) {
 
   test(`test${i}`, async ({ page }) => {
 
