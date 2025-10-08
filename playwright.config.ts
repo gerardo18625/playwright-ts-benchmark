@@ -40,6 +40,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      fullyParallel: true
     }
 
     /* Test against mobile viewports. */
