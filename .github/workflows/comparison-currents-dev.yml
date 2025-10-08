@@ -36,7 +36,6 @@ jobs:
 
       - name: Playwright Tests
         continue-on-error: false
-        working-directory: ./basic
         env:
           CURRENTS_PROJECT_ID: rcthJO
           CURRENTS_RECORD_KEY: 3PKAFflJX5D83w67
