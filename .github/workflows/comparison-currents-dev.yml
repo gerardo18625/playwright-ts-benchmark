@@ -54,6 +54,7 @@ jobs:
       env:
         CURRENTS_PROJECT_ID: rcthJO
         CURRENTS_RECORD_KEY: 3PKAFflJX5D83w67
+        CURRENTS_CI_BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       run: |
         npx pwc --workers 4 --shard=${{ matrix.shard }}/4 --ci-build-id ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shard }}
       shell: bash
