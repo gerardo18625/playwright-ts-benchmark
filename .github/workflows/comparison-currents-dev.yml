@@ -75,7 +75,7 @@ jobs:
     # STEP 2: Run Playwright tests and Monitor Resources (FIXED INDENTATION)
     - name: Run Playwright tests and Monitor Resources (N= 4 Workers)
       env:
-        CURRENTS_PROJECT_ID: bnsqNa
+        CURRENTS_PROJECT_ID: rcthJO
         CURRENTS_RECORD_KEY: 3PKAFflJX5D83w67
       run: |
         ./monitor.sh &
