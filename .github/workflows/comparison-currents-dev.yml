@@ -55,6 +55,6 @@ jobs:
         CURRENTS_PROJECT_ID: rcthJO
         CURRENTS_RECORD_KEY: 3PKAFflJX5D83w67
       run: |
-        npx pwc --workers 4 --shard=${{ matrix.shard }}/4
+        npx pwc --workers 4 --shard=${{ matrix.shard }}/4 --ci-build-id ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shard }}
       shell: bash
     # END OF NEW MONITORING STEPS
