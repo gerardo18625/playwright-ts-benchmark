@@ -1,0 +1,108 @@
+name: Playwright & Currents.dev
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sharded-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+
+    - name: Report runner specifications
+      run: |
+        echo "--- CPU Info ---"
+        nproc --all
+        lscpu
+        echo "--- Memory Info ---"
+        free -h
+        echo "--- Disk Space ---"
+        df -h
+    
+    - name: Get npm cache directory
+      id: npm-cache-dir
+      run: |
+        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
+    - name: Cache npm dependencies
+      uses: actions/cache@v4
+      id: npm-cache
+      with:
+        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Cache Playwright Browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+    
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+    # STEP 1: Define Resource Monitor Script (Same as before, ensuring spacing)
+    - name: Define Resource Monitor Script
+      run: |
+        echo '#!/bin/bash' > monitor.sh
+        echo 'while true; do' >> monitor.sh
+        echo '  CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk "{print 100 - \$1}")' >> monitor.sh
+        echo '  MEM_USAGE=$(free -m | grep Mem | awk "{print \$3/\$2 * 100.0}")' >> monitor.sh
+        echo '  echo "DATE,CPU USAGE,MEM_USAGE" >> resource_log_ts.txt' >> monitor.sh
+        echo '  echo "$(date +%s),$CPU_USAGE,$MEM_USAGE" >> resource_log_ts.txt' >> monitor.sh
+        echo '  sleep 3' >> monitor.sh # Sample every 3 seconds
+        echo 'done' >> monitor.sh
+        chmod +x monitor.sh
+      shell: bash
+
+    # STEP 2: Run Playwright tests and Monitor Resources (FIXED INDENTATION)
+    - name: Run Playwright tests and Monitor Resources (N= 4 Workers)
+      run: |
+        ./monitor.sh &
+        MONITOR_PID=$!
+        echo "Monitor PID: $MONITOR_PID"
+        
+        npx pwc --workers 4 --shard=${{ matrix.shard }}/4
+        TEST_EXIT_CODE=$?
+        
+        kill $MONITOR_PID
+        
+        if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "Tests failed with exit code $TEST_EXIT_CODE."
+            exit $TEST_EXIT_CODE
+        fi
+      shell: bash
+    # END OF NEW MONITORING STEPS
+    
+    # Uploads the standard Playwright report
+    - uses: actions/upload-artifact@v4
+      if: ${{!cancelled() }}
+      with:
+        name: playwright-report-shard-${{ matrix.shard }}
+        path: playwright-report/
+        retention-days: 30
+    
+    # NEW STEP: Uploads the performance log artifact
+    - uses: actions/upload-artifact@v4
+      if: ${{!cancelled() }}
+      with:
+        name: playwright-ts-performance-log-shard-${{ matrix.shard }}
+        path: resource_log_ts.txt
+        retention-days: 30
